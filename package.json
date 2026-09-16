@@ -1,0 +1,35 @@
+{
+  "name": "yougile-api-mcp",
+  "version": "0.1.0",
+  "description": "MCP-сервер к API YouGile: доска, задачи и комментарии для ИИ-ассистента",
+  "type": "module",
+  "bin": {
+    "yougile-mcp": "./yougile-mcp.mjs"
+  },
+  "main": "./yougile-mcp.mjs",
+  "files": [
+    "yougile-mcp.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "yougile",
+    "kanban",
+    "model-context-protocol",
+    "task-tracker"
+  ],
+  "author": "trueblackat",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trueblackat/yougile-api-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/trueblackat/yougile-api-mcp/issues"
+  },
+  "homepage": "https://github.com/trueblackat/yougile-api-mcp#readme"
+}
