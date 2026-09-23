@@ -1,12 +1,15 @@
 {
   "name": "yougile-api-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP-сервер к API YouGile: доска, задачи и комментарии для ИИ-ассистента",
   "type": "module",
   "bin": {
     "yougile-mcp": "./yougile-mcp.mjs"
   },
   "main": "./yougile-mcp.mjs",
+  "scripts": {
+    "test": "node --test"
+  },
   "files": [
     "yougile-mcp.mjs",
     "README.md",
