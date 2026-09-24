@@ -209,7 +209,10 @@ test('tools/list: у каждого инструмента схема и annotat
       assert.equal(t.inputSchema.type, 'object', t.name);
       assert.equal(typeof t.annotations.title, 'string', t.name);
       assert.equal(t.annotations.openWorldHint, true, t.name);
-      if (!t.annotations.readOnlyHint) assert.equal(typeof t.annotations.destructiveHint, 'boolean', t.name);
+      for (const hint of ['readOnlyHint', 'destructiveHint', 'idempotentHint', 'openWorldHint']) {
+        assert.equal(typeof t.annotations[hint], 'boolean', `${t.name}.${hint}`);
+      }
+      if (t.annotations.readOnlyHint) assert.equal(t.annotations.destructiveHint, false, t.name);
     }
 
     const byName = Object.fromEntries(tools.map((t) => [t.name, t.annotations]));

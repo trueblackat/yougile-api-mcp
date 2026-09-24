@@ -1,6 +1,6 @@
 {
   "name": "yougile-api-mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MCP-сервер к API YouGile: доска, задачи и комментарии для ИИ-ассистента",
   "type": "module",
   "bin": {

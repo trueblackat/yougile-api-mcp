@@ -47,7 +47,7 @@
 import readline from 'node:readline';
 
 const BASE = (process.env.YOUGILE_BASE_URL || 'https://yougile.com/api-v2').replace(/\/+$/, '');
-const VERSION = '0.2.0';
+const VERSION = '0.2.1';
 
 // ── Ограничитель частоты: 50 запросов в минуту на компанию ───────────────────────
 // Держим запас (45), чтобы параллельный вебхук или второй клиент не выбили нас в 429.
@@ -123,11 +123,11 @@ const num = (description) => ({ type: 'number', description });
 const bool = (description) => ({ type: 'boolean', description });
 
 // Подсказки клиенту (annotations из спецификации MCP): по ним он решает, спрашивать ли
-// подтверждение перед вызовом. openWorldHint — все инструменты ходят во внешний API.
-// У записи destructiveHint по умолчанию false: создание задачи и комментария ничего не
-// перезаписывает, а вот обновление может затереть поля или удалить задачу.
-const READ = (title) => ({ title, readOnlyHint: true, idempotentHint: true, openWorldHint: true });
-const WRITE = (title, extra) => ({ title, readOnlyHint: false, destructiveHint: false, openWorldHint: true, ...extra });
+// подтверждение перед вызовом. Все четыре hint-а у каждого инструмента заданы явно литералом,
+// а не через хелпер: так их видят и клиенты, и статические сканеры каталогов.
+// openWorldHint — все инструменты ходят во внешний API. destructiveHint у создания false:
+// новая задача или комментарий ничего не перезаписывают, а обновление может затереть поля
+// или удалить задачу.
 
 // Поля задачи, общие для создания и изменения. Схемы и сборка тела запроса — рядом,
 // чтобы новое поле нельзя было добавить в одно место и забыть в другом.
@@ -343,7 +343,13 @@ async function attachSticker(boardId, stickerId) {
 const TOOLS = [
   {
     name: 'yougile_map',
-    annotations: READ('Карта проектов, досок и колонок'),
+    annotations: {
+      title: 'Карта проектов, досок и колонок',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Карта доски: проекты, их доски и колонки с идентификаторами. Вызывать первым — остальные инструменты работают по этим ID.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
@@ -370,7 +376,13 @@ const TOOLS = [
 
   {
     name: 'yougile_stickers',
-    annotations: READ('Стикеры и их состояния'),
+    annotations: {
+      title: 'Стикеры и их состояния',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Пользовательские стикеры (приоритеты, статусы, метки, поля) и спринты — с ID состояний. ' +
       'Нужны, чтобы фильтровать задачи по стикеру и выставлять стикеры задаче.',
@@ -389,7 +401,13 @@ const TOOLS = [
 
   {
     name: 'yougile_create_sticker',
-    annotations: WRITE('Создать стикер', { idempotentHint: false }),
+    annotations: {
+      title: 'Создать стикер',
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
     description:
       'Создать стикер с состояниями: обычный (приоритет, статус, метка) или спринты. ' +
       'С boardId сразу включает его на доске — иначе задачам этой доски его не выставить. Возвращает стикер с ID состояний.',
@@ -421,7 +439,13 @@ const TOOLS = [
 
   {
     name: 'yougile_update_sticker',
-    annotations: WRITE('Изменить стикер', { destructiveHint: true, idempotentHint: false }),
+    annotations: {
+      title: 'Изменить стикер',
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
     description:
       'Изменить стикер: переименовать, сменить иконку, удалить (deleted); добавить состояния (addStates), ' +
       'переименовать, перекрасить, сдвинуть даты спринта или удалить существующие (updateStates).',
@@ -476,7 +500,13 @@ const TOOLS = [
 
   {
     name: 'yougile_tasks',
-    annotations: READ('Список задач'),
+    annotations: {
+      title: 'Список задач',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Список задач. Фильтры: колонка, исполнитель, подстрока заголовка, стикер и его состояние. Фильтра по проекту в API нет — фильтруйте по колонке.',
     inputSchema: {
@@ -513,7 +543,13 @@ const TOOLS = [
 
   {
     name: 'yougile_task',
-    annotations: READ('Карточка задачи'),
+    annotations: {
+      title: 'Карточка задачи',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description: 'Одна задача целиком: стикеры, чеклисты, подзадачи, учёт времени. Принимает и UUID, и код вида ABC-123.',
     inputSchema: {
       type: 'object',
@@ -526,7 +562,13 @@ const TOOLS = [
 
   {
     name: 'yougile_create_task',
-    annotations: WRITE('Создать задачу', { idempotentHint: false }),
+    annotations: {
+      title: 'Создать задачу',
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
     description:
       'Создать задачу в колонке. Описание — HTML, не markdown. Подзадача — это обычная задача, ' +
       'чей ID добавлен в subtasks родителя. idempotencyKey защищает от дублей при повторе.',
@@ -550,7 +592,13 @@ const TOOLS = [
 
   {
     name: 'yougile_update_task',
-    annotations: WRITE('Изменить задачу', { destructiveHint: true, idempotentHint: true }),
+    annotations: {
+      title: 'Изменить задачу',
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Изменить задачу: перенести в другую колонку (columnId), закрыть (completed), переименовать, сменить описание, ' +
       'исполнителей, срок, стикеры, чеклисты, подзадачи, учёт времени, участников чата, удалить (deleted). ' +
@@ -605,7 +653,13 @@ const TOOLS = [
 
   {
     name: 'yougile_task_subscribers',
-    annotations: READ('Участники чата задачи'),
+    annotations: {
+      title: 'Участники чата задачи',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description: 'Кто подписан на чат задачи и получает уведомления о комментариях. Изменить — yougile_update_task.',
     inputSchema: {
       type: 'object',
@@ -618,7 +672,13 @@ const TOOLS = [
 
   {
     name: 'yougile_comments',
-    annotations: READ('Комментарии задачи'),
+    annotations: {
+      title: 'Комментарии задачи',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description: 'Комментарии задачи (её чат), новые сверху. Можно отфильтровать по автору, тексту и времени.',
     inputSchema: {
       type: 'object',
@@ -657,7 +717,13 @@ const TOOLS = [
 
   {
     name: 'yougile_comment',
-    annotations: WRITE('Написать комментарий', { idempotentHint: false }),
+    annotations: {
+      title: 'Написать комментарий',
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
     description: 'Написать комментарий в задачу. Текст обычный, разметка не нужна.',
     inputSchema: {
       type: 'object',
@@ -673,7 +739,13 @@ const TOOLS = [
 
   {
     name: 'yougile_users',
-    annotations: READ('Сотрудники компании'),
+    annotations: {
+      title: 'Сотрудники компании',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description: 'Сотрудники компании: ID, имя, почта. Нужны, чтобы назначать задачи.',
     inputSchema: {
       type: 'object',
@@ -688,7 +760,13 @@ const TOOLS = [
 
   {
     name: 'yougile_me',
-    annotations: READ('Текущий пользователь'),
+    annotations: {
+      title: 'Текущий пользователь',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description: 'Сотрудник, от чьего имени выпущен ключ. Удобно для «мои задачи» и чтобы не отвечать самому себе.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     run: async () => user(await api('GET', '/users/me')),
@@ -696,7 +774,13 @@ const TOOLS = [
 
   {
     name: 'yougile_create_structure',
-    annotations: WRITE('Создать проект, доску или колонку', { idempotentHint: false }),
+    annotations: {
+      title: 'Создать проект, доску или колонку',
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
     description:
       'Создать проект, доску в проекте или колонку на доске. Для доски parentId — ID проекта, для колонки — ID доски.',
     inputSchema: {
@@ -718,7 +802,13 @@ const TOOLS = [
 
   {
     name: 'yougile_update_structure',
-    annotations: WRITE('Изменить проект, доску или колонку', { destructiveHint: true, idempotentHint: true }),
+    annotations: {
+      title: 'Изменить проект, доску или колонку',
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Переименовать, перенести (доску в другой проект, колонку на другую доску), сменить цвет колонки, ' +
       'состав проекта, стикеры доски или удалить (deleted) проект, доску или колонку.',

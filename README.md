@@ -32,7 +32,7 @@ API при этом обычный REST и бесплатный на любом 
 | `yougile_create_structure` | Создать проект, доску в проекте или колонку на доске. |
 | `yougile_update_structure` | Переименовать, перенести, перекрасить или удалить проект, доску или колонку; поменять состав проекта и стикеры доски. |
 
-Каждый инструмент помечен подсказками из спецификации MCP (`annotations`), чтобы клиент понимал, что можно вызывать без подтверждения:
+Каждый инструмент помечен всеми четырьмя подсказками из спецификации MCP (`annotations`: `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`), чтобы клиент понимал, что можно вызывать без подтверждения:
 
 - `yougile_map`, `yougile_stickers`, `yougile_tasks`, `yougile_task`, `yougile_task_subscribers`, `yougile_comments`, `yougile_users` и `yougile_me` только читают (`readOnlyHint`);
 - `yougile_create_task`, `yougile_comment`, `yougile_create_structure` и `yougile_create_sticker` добавляют новое и ничего не затирают, но при повторном вызове создадут дубль;
@@ -160,6 +160,17 @@ claude mcp add yougile --env YOUGILE_API_KEY=... -- node /абсолютный/�
 
 После правки конфига клиент нужно перезапустить.
 
+## Примеры запросов
+
+Ассистенту не нужно знать названия инструментов — достаточно сказать, что сделать. Что при этом происходит под капотом:
+
+- **«Что у меня в работе на доске „Разработка“?»** — `yougile_map` находит доску и её колонки, `yougile_me` даёт ваш ID, `yougile_tasks` выбирает задачи по колонкам с фильтром по исполнителю.
+- **«Заведи задачу „Починить экспорт в CSV“ в „Бэклог“, назначь на Олю, срок — пятница, приоритет высокий»** — `yougile_users` находит сотрудника, `yougile_stickers` — стикер приоритета и его состояние, `yougile_create_task` создаёт задачу.
+- **«Перенеси ID-35 в „Готово“ и напиши в чат, что выкатили»** — `yougile_task` по коду, `yougile_update_task` с новой колонкой, `yougile_comment`.
+- **«Что обсуждали в задаче ID-12 за последнюю неделю?»** — `yougile_comments` с фильтром «начиная с».
+- **«Сделай стикер „Спринт“ на две недели с 1 октября и включи его на доске»** — `yougile_create_sticker` с `boardId`.
+- **«Создай доску „Маркетинг“ с колонками „Идеи“, „В работе“, „Готово“»** — `yougile_create_structure` несколько раз подряд.
+
 ## Переменные окружения
 
 | Переменная | Обязательна | Значение |
@@ -205,5 +216,7 @@ Single file, no dependencies, Node.js 18+ required.
 Install and run: `npx github:trueblackat/yougile-api-mcp`
 
 YouGile has no button to create an API key in its web interface — keys are issued through the API only. Run `npx github:trueblackat/yougile-api-mcp --login`, enter your YouGile email and password (the password is never stored or printed), and the key is printed to stdout. Pass it as the `YOUGILE_API_KEY` environment variable. The key grants company-wide access, so keep it secret.
+
+Example prompts: "What's assigned to me on the Dev board?", "Create a task 'Fix CSV export' in Backlog, assign it to Olga, due Friday, high priority", "Move ID-35 to Done and comment that it shipped", "Create a board 'Marketing' with columns Ideas, In progress, Done". Every tool declares all four MCP hints (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`), so clients can skip confirmation for reads and ask before destructive updates.
 
 Licensed under MIT — see [LICENSE](LICENSE).
